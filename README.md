@@ -48,7 +48,7 @@ A modern, interactive Sankey diagram visualization plugin for [openLCA](https://
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/openlca-sankey-plugin.git
+   git clone https://github.com/ankur-paan/openlca-sankey-plugin.git
    cd openlca-sankey-plugin
    ```
 
@@ -180,7 +180,6 @@ This plugin follows modern UI/UX best practices:
 
 ## 🐛 Known Issues & Limitations
 
-- Mouse wheel zoom not yet implemented
 - No undo/redo for node repositioning
 - Export doesn't preserve custom node positions (exports layout at identity transform)
 - Single-node graphs show a minimal placeholder
@@ -210,8 +209,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact & Support
 
-- **Issues** – Please use the [GitHub Issues](https://github.com/yourusername/openlca-sankey-plugin/issues) tracker
-- **Discussions** – Join [GitHub Discussions](https://github.com/yourusername/openlca-sankey-plugin/discussions)
+- **Issues** – Please use the [GitHub Issues](https://github.com/ankur-paan/openlca-sankey-plugin/issues) tracker
+- **Discussions** – Join [GitHub Discussions](https://github.com/ankur-paan/openlca-sankey-plugin/discussions)
 
 ## 🗺️ Roadmap
 
