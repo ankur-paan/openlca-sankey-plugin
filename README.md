@@ -1,11 +1,36 @@
 # OpenLCA Sankey Plugin
 
-A modern, interactive Sankey diagram visualization plugin for [openLCA](https://www.openlca.org/) 2.6.0, featuring advanced customization, liquid glass UI, and high-quality export capabilities.
+A modern, interactive Sankey diagram visualization plugin for [openLCA](https://www.openlca.org/) 2.6.0 that transforms default diagrams into **publication-ready, presentation-quality visualizations**. Solves text truncation, font visibility, and export quality issues while preserving exact openLCA data calculations.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![React](https://img.shields.io/badge/react-19.2-blue.svg)
 ![TypeScript](https://img.shields.io/badge/typescript-5.x-blue.svg)
+
+## 🎯 Why This Plugin?
+
+The default openLCA Sankey diagram has significant **presentation limitations** that make it unsuitable for professional publications, websites, and presentations:
+
+### Problems with Default Sankey
+- ❌ **Text Truncation** – Process names and flow names get cut off with "..." making diagrams incomplete
+- ❌ **Poor Font Visibility** – Small, fixed font sizes are difficult to read, especially in exports
+- ❌ **Limited Customization** – No control over box sizes, spacing, or layout proportions
+- ❌ **Export Quality Issues** – Low-resolution exports with inconsistent colors and poor scaling
+- ❌ **Not Publication-Ready** – Diagrams require extensive post-processing in graphic design tools
+- ❌ **Static Layout** – Cannot reposition nodes or adjust spacing for clarity
+
+### ✅ How This Plugin Solves These Issues
+
+This plugin **enhances presentation quality** while preserving the exact same data from openLCA:
+
+- ✅ **Smart Text Wrapping** – Automatically wraps long names across multiple lines, no truncation
+- ✅ **Adjustable Typography** – 4 independent font size controls for optimal readability
+- ✅ **Full Layout Control** – Customize box dimensions, spacing, and content ratios
+- ✅ **Publication-Quality Exports** – High-resolution PNG (4× pixel ratio) with perfect color matching
+- ✅ **Interactive Editing** – Drag nodes to reposition, pan/zoom for exploration
+- ✅ **Professional Aesthetics** – Modern liquid glass UI suitable for presentations and websites
+
+**The data remains identical to openLCA's native calculations** – this plugin simply makes your Sankey diagrams **presentation-ready** without manual editing.
 
 ## ✨ Features
 
