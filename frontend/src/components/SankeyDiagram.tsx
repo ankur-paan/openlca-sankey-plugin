@@ -136,8 +136,23 @@ function computeLayout(
 
 const formatVal = (v: number | undefined) => {
     if (v === undefined || v === null) return '0.000';
-    if (Math.abs(v) < 0.0001) return '0.000';
-    if (Math.abs(v) >= 1) return v.toFixed(3);
+    const absV = Math.abs(v);
+    
+    // Scientific notation for very small numbers
+    if (absV > 0 && absV < 0.001) {
+        return v.toExponential(3);
+    }
+    
+    // Scientific notation for very large numbers
+    if (absV >= 1e6) {
+        return v.toExponential(3);
+    }
+    
+    // Zero or very close to zero
+    if (absV < 1e-10) return '0.000';
+    
+    // Regular formatting for intermediate values
+    if (absV >= 1) return v.toFixed(3);
     return v.toFixed(4);
 };
 
