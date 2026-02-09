@@ -89,18 +89,22 @@ function computeLayout(
 ): Map<number, NodePos> {
     const positions = new Map<number, NodePos>();
     const levelNodes = new Map<number, number[]>();
+    const parentMap = new Map<number, number>(); // child -> parent
 
-    const queue: { idx: number; level: number }[] = [{ idx: rootIdx, level: 0 }];
+    // Build level assignment and parent map
+    const queue: { idx: number; level: number; parent?: number }[] = [{ idx: rootIdx, level: 0 }];
     const visited = new Set<number>();
 
     while (queue.length > 0) {
-        const { idx, level } = queue.shift()!;
+        const { idx, level, parent } = queue.shift()!;
         if (visited.has(idx)) continue;
         visited.add(idx);
         if (!levelNodes.has(level)) levelNodes.set(level, []);
         levelNodes.get(level)!.push(idx);
+        if (parent !== undefined) parentMap.set(idx, parent);
+        
         (children.get(idx) || []).forEach(c => {
-            if (!visited.has(c.idx)) queue.push({ idx: c.idx, level: level + 1 });
+            if (!visited.has(c.idx)) queue.push({ idx: c.idx, level: level + 1, parent: idx });
         });
     }
 
@@ -109,59 +113,121 @@ function computeLayout(
 
     if (isVertical) {
         const levelStep = nodeHeight + layerGap;
+        const yDir = orientation === 'north' ? 1 : -1;
+        
         levelNodes.forEach((nodesAtLevel, level) => {
-            // Sort by upstream contribution (descending) to keep main path centered
+            // Sort by upstream contribution (descending)
             const sorted = [...nodesAtLevel].sort((a, b) => {
                 const upstreamA = nodes[a]?.upstreamPct ?? 0;
                 const upstreamB = nodes[b]?.upstreamPct ?? 0;
-                return upstreamB - upstreamA; // Highest contribution first
+                return upstreamB - upstreamA;
             });
 
-            // Arrange nodes with highest in center, alternating left/right
-            const arranged: number[] = [];
-            sorted.forEach((nodeIdx, i) => {
-                if (i % 2 === 0) {
-                    arranged.push(nodeIdx); // Even indices go to the right side
-                } else {
-                    arranged.unshift(nodeIdx); // Odd indices go to the left side
-                }
-            });
-
-            const totalWidth = arranged.length * nodeWidth + (arranged.length - 1) * siblingGap;
-            const startX = -totalWidth / 2;
-            const yDir = orientation === 'north' ? 1 : -1;
             const yPos = level * levelStep * yDir;
-            arranged.forEach((nodeIdx, i) => {
-                positions.set(nodeIdx, { x: startX + i * (nodeWidth + siblingGap), y: yPos, level });
-            });
+
+            if (level === 0) {
+                // Root node centered at origin
+                positions.set(sorted[0], { x: 0, y: yPos, level });
+            } else {
+                // Group nodes by parent to align children near parent
+                const nodesByParent = new Map<number, number[]>();
+                sorted.forEach(nodeIdx => {
+                    const parent = parentMap.get(nodeIdx);
+                    if (parent !== undefined) {
+                        if (!nodesByParent.has(parent)) nodesByParent.set(parent, []);
+                        nodesByParent.get(parent)!.push(nodeIdx);
+                    }
+                });
+
+                // Position each group near its parent, keeping highest-contribution child centered
+                nodesByParent.forEach((childNodes, parentIdx) => {
+                    const parentPos = positions.get(parentIdx);
+                    if (!parentPos) return;
+
+                    const parentX = parentPos.x;
+                    const numChildren = childNodes.length;
+
+                    // Sort children by upstreamPct descending
+                    const sortedChildren = [...childNodes].sort((a, b) => {
+                        const upA = nodes[a]?.upstreamPct ?? 0;
+                        const upB = nodes[b]?.upstreamPct ?? 0;
+                        return upB - upA;
+                    });
+
+                    if (numChildren === 1) {
+                        positions.set(sortedChildren[0], { x: parentX, y: yPos, level });
+                    } else {
+                        // Center the highest-contribution child(ren) under the parent
+                        const centerIdx = Math.floor((numChildren - 1) / 2);
+                        for (let i = 0; i < numChildren; i++) {
+                            // Offset from center: 0 for center, -1, +1, -2, +2, ...
+                            const offset = i - centerIdx;
+                            // Place center child at parentX, others to sides
+                            const x = parentX + offset * (nodeWidth + siblingGap);
+                            positions.set(sortedChildren[i], { x, y: yPos, level });
+                        }
+                    }
+                });
+            }
         });
     } else {
         const levelStep = nodeWidth + layerGap;
+        const xDir = orientation === 'west' ? 1 : -1;
+        
         levelNodes.forEach((nodesAtLevel, level) => {
-            // Sort by upstream contribution (descending) to keep main path centered
+            // Sort by upstream contribution (descending)
             const sorted = [...nodesAtLevel].sort((a, b) => {
                 const upstreamA = nodes[a]?.upstreamPct ?? 0;
                 const upstreamB = nodes[b]?.upstreamPct ?? 0;
-                return upstreamB - upstreamA; // Highest contribution first
+                return upstreamB - upstreamA;
             });
 
-            // Arrange nodes with highest in center, alternating top/bottom
-            const arranged: number[] = [];
-            sorted.forEach((nodeIdx, i) => {
-                if (i % 2 === 0) {
-                    arranged.push(nodeIdx); // Even indices go to the bottom side
-                } else {
-                    arranged.unshift(nodeIdx); // Odd indices go to the top side
-                }
-            });
-
-            const totalHeight = arranged.length * nodeHeight + (arranged.length - 1) * siblingGap;
-            const startY = -totalHeight / 2;
-            const xDir = orientation === 'west' ? 1 : -1;
             const xPos = level * levelStep * xDir;
-            arranged.forEach((nodeIdx, i) => {
-                positions.set(nodeIdx, { x: xPos, y: startY + i * (nodeHeight + siblingGap), level });
-            });
+
+            if (level === 0) {
+                // Root node centered at origin
+                positions.set(sorted[0], { x: xPos, y: 0, level });
+            } else {
+                // Group nodes by parent to align children near parent
+                const nodesByParent = new Map<number, number[]>();
+                sorted.forEach(nodeIdx => {
+                    const parent = parentMap.get(nodeIdx);
+                    if (parent !== undefined) {
+                        if (!nodesByParent.has(parent)) nodesByParent.set(parent, []);
+                        nodesByParent.get(parent)!.push(nodeIdx);
+                    }
+                });
+
+                // Position each group near its parent, keeping highest-contribution child centered
+                nodesByParent.forEach((childNodes, parentIdx) => {
+                    const parentPos = positions.get(parentIdx);
+                    if (!parentPos) return;
+
+                    const parentY = parentPos.y;
+                    const numChildren = childNodes.length;
+
+                    // Sort children by upstreamPct descending
+                    const sortedChildren = [...childNodes].sort((a, b) => {
+                        const upA = nodes[a]?.upstreamPct ?? 0;
+                        const upB = nodes[b]?.upstreamPct ?? 0;
+                        return upB - upA;
+                    });
+
+                    if (numChildren === 1) {
+                        positions.set(sortedChildren[0], { x: xPos, y: parentY, level });
+                    } else {
+                        // Center the highest-contribution child(ren) at parentY, others to sides
+                        const centerIdx = Math.floor((numChildren - 1) / 2);
+                        for (let i = 0; i < numChildren; i++) {
+                            // Offset from center: 0 for center, -1, +1, -2, +2, ...
+                            const offset = i - centerIdx;
+                            // Place center child at parentY, others to sides
+                            const y = parentY + offset * (nodeHeight + siblingGap);
+                            positions.set(sortedChildren[i], { x: xPos, y, level });
+                        }
+                    }
+                });
+            }
         });
     }
 
