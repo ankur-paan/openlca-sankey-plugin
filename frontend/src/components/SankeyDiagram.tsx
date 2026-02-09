@@ -110,22 +110,56 @@ function computeLayout(
     if (isVertical) {
         const levelStep = nodeHeight + layerGap;
         levelNodes.forEach((nodesAtLevel, level) => {
-            const totalWidth = nodesAtLevel.length * nodeWidth + (nodesAtLevel.length - 1) * siblingGap;
+            // Sort by upstream contribution (descending) to keep main path centered
+            const sorted = [...nodesAtLevel].sort((a, b) => {
+                const upstreamA = nodes[a]?.upstreamPct ?? 0;
+                const upstreamB = nodes[b]?.upstreamPct ?? 0;
+                return upstreamB - upstreamA; // Highest contribution first
+            });
+
+            // Arrange nodes with highest in center, alternating left/right
+            const arranged: number[] = [];
+            sorted.forEach((nodeIdx, i) => {
+                if (i % 2 === 0) {
+                    arranged.push(nodeIdx); // Even indices go to the right side
+                } else {
+                    arranged.unshift(nodeIdx); // Odd indices go to the left side
+                }
+            });
+
+            const totalWidth = arranged.length * nodeWidth + (arranged.length - 1) * siblingGap;
             const startX = -totalWidth / 2;
             const yDir = orientation === 'north' ? 1 : -1;
             const yPos = level * levelStep * yDir;
-            nodesAtLevel.forEach((nodeIdx, i) => {
+            arranged.forEach((nodeIdx, i) => {
                 positions.set(nodeIdx, { x: startX + i * (nodeWidth + siblingGap), y: yPos, level });
             });
         });
     } else {
         const levelStep = nodeWidth + layerGap;
         levelNodes.forEach((nodesAtLevel, level) => {
-            const totalHeight = nodesAtLevel.length * nodeHeight + (nodesAtLevel.length - 1) * siblingGap;
+            // Sort by upstream contribution (descending) to keep main path centered
+            const sorted = [...nodesAtLevel].sort((a, b) => {
+                const upstreamA = nodes[a]?.upstreamPct ?? 0;
+                const upstreamB = nodes[b]?.upstreamPct ?? 0;
+                return upstreamB - upstreamA; // Highest contribution first
+            });
+
+            // Arrange nodes with highest in center, alternating top/bottom
+            const arranged: number[] = [];
+            sorted.forEach((nodeIdx, i) => {
+                if (i % 2 === 0) {
+                    arranged.push(nodeIdx); // Even indices go to the bottom side
+                } else {
+                    arranged.unshift(nodeIdx); // Odd indices go to the top side
+                }
+            });
+
+            const totalHeight = arranged.length * nodeHeight + (arranged.length - 1) * siblingGap;
             const startY = -totalHeight / 2;
             const xDir = orientation === 'west' ? 1 : -1;
             const xPos = level * levelStep * xDir;
-            nodesAtLevel.forEach((nodeIdx, i) => {
+            arranged.forEach((nodeIdx, i) => {
                 positions.set(nodeIdx, { x: xPos, y: startY + i * (nodeHeight + siblingGap), level });
             });
         });
